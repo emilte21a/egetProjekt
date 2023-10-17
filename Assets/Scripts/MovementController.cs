@@ -17,10 +17,10 @@ public class MovementController : MonoBehaviour
     [SerializeField]
     public float jump = 400;
     public Rigidbody2D rb;
-    private bool facingRight = true;
-    public bool isJumping;
 
-    float groundRadius= 0.2f;
+    private bool facingRight = true;
+    private bool isJumping;
+
 
     [SerializeField] 
     Transform feet;
@@ -69,11 +69,7 @@ public class MovementController : MonoBehaviour
         else
         {
             transform.eulerAngles = new Vector3(0, 180, 0); // flipped
-        }
-
-
-        // Try out this delta time method??
-        //rb2d.transform.position += new Vector3(speed * Time.deltaTime, 0.0f, 0.0f);
+        }       
     }
 
     

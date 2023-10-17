@@ -53,19 +53,24 @@ public class ProceduralGeneration : MonoBehaviour
     {
         for (int x = 0; x < worldSize; x++)
         {
-            float height = Mathf.PerlinNoise((x + seed) * terrainFreq, seed * terrainFreq) * heightMultiplier + heightAddition;
+            int height = (int) (Mathf.PerlinNoise((x + seed) * terrainFreq, seed * terrainFreq) * heightMultiplier + heightAddition);
             for (int y = 0; y < height; y++)
             {
-                if (y == height+ 1)
+                if (y == height-1)
                 {
+                    print("huh");
                     SpawnObject(GrassTile, x, y);
                 }
 
-                else if (y == height + 2)
+                else if (y == height-2)
                 {
                     SpawnObject(DirtTile, x, y);
                 }
-                
+
+                else
+                {
+                    SpawnObject(StoneTile,x,y);
+                }
 
             }
         }
@@ -80,6 +85,7 @@ public class ProceduralGeneration : MonoBehaviour
             newTile.transform.parent = this.transform;
             newTile.AddComponent<SpriteRenderer>();
             newTile.GetComponent<SpriteRenderer>().sprite = _object;
+            newTile.AddComponent<BoxCollider2D>();
             newTile.transform.position = new Vector2(x * 2, y * 2);
         }
     }
