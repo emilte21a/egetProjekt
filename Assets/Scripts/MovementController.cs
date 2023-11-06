@@ -7,86 +7,99 @@ using UnityEngine;
 
 public class MovementController : MonoBehaviour
 {
-    // Start is called before the first frame update
-    SpriteRenderer spriteRenderer;
     public Animator animator;
 
-    [SerializeField]
+    [Header("Movement Controls")]
     public float speed = 5;
 
-    [SerializeField]
-    public float jump = 400;
+    public float jumpForce = 400;
+
     public Rigidbody2D rb;
 
-    private bool facingRight = true;
-    private bool isJumping;
+    private bool facingRight;
+
+    private bool canJump;
 
 
-    [SerializeField] 
+    [Header("Ground Check")]
+    public float castDistance = 1;
+    public Vector2 boxSize;
+    public LayerMask layerMask;
+
+
+    [SerializeField]
     Transform feet;
 
-    void Start()
+    private void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         rb.freezeRotation = true;
+        facingRight = true;
     }
 
-    void Update()
+    private void Update()
     {
+        isGrounded();
+       
         transform.eulerAngles = new Vector3(0, 0, 0);
+
+        if (Input.GetKeyDown(KeyCode.Space) && canJump)
+            Jump();
+
+
+        if (rb.velocity.x < 0)
+            facingRight = false;
+
+        else if (rb.velocity.x > 0)
+            facingRight = true;
+
+
+        if (facingRight)
+            transform.eulerAngles = new Vector3(0, 0, 0); // normal
+
+        else
+            transform.eulerAngles = new Vector3(0, 180, 0); // flipped
+
+    }
+
+    private void FixedUpdate()
+    {
         float moveHorizontal = Input.GetAxisRaw("Horizontal");
 
         rb.velocity = new Vector2(moveHorizontal * speed, rb.velocity.y);
 
+
         if (moveHorizontal != 0)
-        {
             animator.SetBool("isRunning", true);
-        }
+
         else
-        {
             animator.SetBool("isRunning", false);
-        }
+    }
 
-        if (Input.GetKeyDown(KeyCode.Space) && isJumping == false)
-        {
-            rb.AddForce(new Vector2(rb.velocity.x, jump));
-        }
+    private void Jump()
+    {
+        rb.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+    }
 
-        Debug.Log(isJumping);
-        if (rb.velocity.x < 0)
-        {
-            facingRight = false;
-        }
-        else if (rb.velocity.x > 0)
-        {
-            facingRight = true;
-        }
+    private void isGrounded()
+    {
+        if (Physics2D.BoxCast(transform.position, boxSize, 0, -transform.up, castDistance, layerMask))
+            canJump = true;
 
-        if (facingRight == true)
-        {
-            transform.eulerAngles = new Vector3(0, 0, 0); // normal
-        }
         else
-        {
-            transform.eulerAngles = new Vector3(0, 180, 0); // flipped
-        }       
+            StartCoroutine(CoyoteTimer());
+        
     }
 
-    
-    private void OnCollisionEnter2D(Collision2D collider)
+    private void OnDrawGizmos()
     {
-        if (collider.gameObject.CompareTag("World"))
-        {
-            isJumping = false;
-        }
+        Gizmos.DrawWireCube(transform.position - transform.up * castDistance, boxSize);
     }
 
-    private void OnCollisionExit2D(Collision2D collider)
+    IEnumerator CoyoteTimer()
     {
-        if (collider.gameObject.CompareTag("World"))
-        {
-            isJumping = true;
-        }
+        yield return new WaitForSecondsRealtime(8f);
+        canJump = false;
     }
-    
+
 }
