@@ -41,12 +41,16 @@ public class ProceduralGeneration : MonoBehaviour
 
     GameObject hoverTile;
 
+    InventoryController inventoryItems;
+
     void Start()
     {
         Debug.ClearDeveloperConsole();
         seed = UnityEngine.Random.Range(-10000, 10000);
         GenerateNoiseTexture();
         GenerateTerrain();
+
+
 
         hoverTile = new GameObject(name = "tileOutline");
         hoverTile.transform.parent = this.transform;
@@ -76,14 +80,13 @@ public class ProceduralGeneration : MonoBehaviour
             int height = (int)(Mathf.PerlinNoise((x + seed) * terrainFreq, seed * terrainFreq) * heightMultiplier + heightAddition);
             for (int y = 0; y < height; y++)
             {
+
                 if (noiseTexture.GetPixel(x, y).r < surfaceValue)
                     shouldPlace = true;
 
                 else
                     shouldPlace = false;
 
-
-                SpawnBackground(BackgroundTile, x, y);
 
                 if (y == height - 1 && shouldPlace)
                     SpawnObject(GrassTile, x, y);
@@ -96,7 +99,10 @@ public class ProceduralGeneration : MonoBehaviour
                 else
                 {
                     if (shouldPlace)
+                    {
                         SpawnObject(StoneTile, x, y);
+                        SpawnBackground(BackgroundTile, x, y);
+                    }
 
 
                     if (noiseTexture.GetPixel(x, y).r > surfaceValue)
@@ -110,7 +116,7 @@ public class ProceduralGeneration : MonoBehaviour
     {
         GameObject newTile = new GameObject(name = "tile");
         newTile.transform.parent = this.transform;
-        newTile.transform.position = new Vector2((int)x + 0.5f, (int)y + 0.5f);
+        newTile.transform.position = new Vector3((int)x + 0.5f, (int)y + 0.5f, 0f);
         newTile.AddComponent<SpriteRenderer>();
         newTile.GetComponent<SpriteRenderer>().sprite = _object;
         newTile.AddComponent<BoxCollider2D>();
@@ -118,15 +124,21 @@ public class ProceduralGeneration : MonoBehaviour
         newTile.tag = "World";
     }
 
-    void SpawnBackground(Sprite _object, int x, int y)
+    void SpawnBackground(Sprite _object, float x, float y)
     {
         GameObject newTile = new GameObject(name = "backgroundTile");
         newTile.transform.parent = this.transform;
+        newTile.transform.position = new Vector3((int)x + 0.5f, (int)y + 0.5f, 0.3f);
         newTile.AddComponent<SpriteRenderer>();
         newTile.GetComponent<SpriteRenderer>().sprite = _object;
-        newTile.transform.position = new Vector2((int)x + 0.5f, (int)y + 0.5f);
         newTile.layer = 7;
         newTile.tag = "World";
+    }
+
+    void DestroyObject(GameObject _gameObject)
+    {
+       //inventoryItems.InventoryGO.Add(_gameObject);
+        Destroy(_gameObject);
     }
 
     bool hover;
@@ -135,7 +147,7 @@ public class ProceduralGeneration : MonoBehaviour
     {
         if (hover)
             hoverTile.SetActive(true);
-        
+
         else
             hoverTile.SetActive(false);
     }
@@ -144,7 +156,7 @@ public class ProceduralGeneration : MonoBehaviour
     {
         if (Vector3.Distance(playerPos, mousePos) < interactionRange)
             return true;
-        
+
         return false;
     }
 
@@ -162,7 +174,7 @@ public class ProceduralGeneration : MonoBehaviour
             hover = false;
             if (Input.GetMouseButtonDown(1) && isWithinRange(playerPos, mousePos))
                 SpawnObject(BrickTile, Mathf.FloorToInt(mousePos.x), Mathf.FloorToInt(mousePos.y));
-            
+
         }
 
         else if (hit.collider.gameObject.tag == "World")
@@ -170,18 +182,18 @@ public class ProceduralGeneration : MonoBehaviour
             if (isWithinRange(playerPos, mousePos))
             {
                 hover = true;
-                hoverTile.transform.position = new Vector2(Mathf.FloorToInt(mousePos.x) + 0.5f, Mathf.FloorToInt(mousePos.y) + 0.5f);
+                hoverTile.transform.position = new Vector3(Mathf.FloorToInt(mousePos.x) + 0.5f, Mathf.FloorToInt(mousePos.y) + 0.5f, -0.1f);
 
                 if (Input.GetMouseButtonDown(0))
-                    Destroy(hit.collider.gameObject);
-                
+                    DestroyObject(hit.collider.gameObject);
+
             }
             else
                 hover = false;
         }
         else
             hover = false;
-        
+
     }
 
 }
