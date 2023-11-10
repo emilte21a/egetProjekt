@@ -16,46 +16,34 @@ public class ProceduralGeneration : MonoBehaviour
 
     public Sprite BackgroundTile;
 
-    public Sprite BrickTile;
-    public Sprite tileOutlineSprite;
-
     [Header("Terrain Controls")]
-    public int worldSize;
+    public int worldSize = 200;
     public float surfaceValue = 0.2f;
     public float caveFreq = 0.05f;
     public float terrainFreq = 0.05f;
     public float seed;
     public Texture2D noiseTexture;
-
     public float heightMultiplier = 15f;
-
     public float heightAddition = 25f;
-
     public LayerMask isGround;
+
+    [Range(0,20)]
+    public int cullingDistance = 5;
 
     private bool shouldPlace;
 
-    private int interactionRange = 12;
+    public Transform playerPos;
 
-    public Transform playerPosition;
-
-    GameObject hoverTile;
-
-    InventoryController inventoryItems;
+    [HideInInspector]
+    public List<GameObject> GeneratedTiles;
 
     void Start()
     {
+        GeneratedTiles = new();
         Debug.ClearDeveloperConsole();
         seed = UnityEngine.Random.Range(-10000, 10000);
         GenerateNoiseTexture();
         GenerateTerrain();
-
-
-
-        hoverTile = new GameObject(name = "tileOutline");
-        hoverTile.transform.parent = this.transform;
-        hoverTile.AddComponent<SpriteRenderer>();
-        hoverTile.GetComponent<SpriteRenderer>().sprite = tileOutlineSprite;
     }
 
     public void GenerateNoiseTexture()
@@ -80,13 +68,11 @@ public class ProceduralGeneration : MonoBehaviour
             int height = (int)(Mathf.PerlinNoise((x + seed) * terrainFreq, seed * terrainFreq) * heightMultiplier + heightAddition);
             for (int y = 0; y < height; y++)
             {
-
                 if (noiseTexture.GetPixel(x, y).r < surfaceValue)
                     shouldPlace = true;
 
                 else
                     shouldPlace = false;
-
 
                 if (y == height - 1 && shouldPlace)
                     SpawnObject(GrassTile, x, y);
@@ -95,24 +81,21 @@ public class ProceduralGeneration : MonoBehaviour
                 else if (y == height - 2 && shouldPlace)
                     SpawnObject(DirtTile, x, y);
 
-
                 else
                 {
-                    if (shouldPlace)
+                    if (shouldPlace && y < height-2)
                     {
                         SpawnObject(StoneTile, x, y);
                         SpawnBackground(BackgroundTile, x, y);
                     }
 
-
-                    if (noiseTexture.GetPixel(x, y).r > surfaceValue)
+                    if (noiseTexture.GetPixel(x, y).r >= surfaceValue)
                         SpawnBackground(BackgroundTile, x, y);
                 }
             }
         }
     }
-
-    void SpawnObject(Sprite _object, float x, float y)
+    public void SpawnObject(Sprite _object, float x, float y)
     {
         GameObject newTile = new GameObject(name = "tile");
         newTile.transform.parent = this.transform;
@@ -122,6 +105,7 @@ public class ProceduralGeneration : MonoBehaviour
         newTile.AddComponent<BoxCollider2D>();
         newTile.layer = 7;
         newTile.tag = "World";
+        GeneratedTiles.Add(newTile);
     }
 
     void SpawnBackground(Sprite _object, float x, float y)
@@ -133,67 +117,36 @@ public class ProceduralGeneration : MonoBehaviour
         newTile.GetComponent<SpriteRenderer>().sprite = _object;
         newTile.layer = 7;
         newTile.tag = "World";
+        GeneratedTiles.Add(newTile);
     }
 
-    void DestroyObject(GameObject _gameObject)
-    {
-       //inventoryItems.InventoryGO.Add(_gameObject);
-        Destroy(_gameObject);
-    }
+    // Vector3 lastpos;
 
-    bool hover;
+    // private void Update() {
 
-    void SelectedTile()
-    {
-        if (hover)
-            hoverTile.SetActive(true);
+    //     if (new Vector3((int)playerPos.position.x, (int)playerPos.position.y) != lastpos)
+    //     {
+    //     FrustumCulling();   
+    //     print("Player is moving");
+    //     }
+    //     else
+    //     {
+    //         print("Player is not moving");
+    //     }
 
-        else
-            hoverTile.SetActive(false);
-    }
+    //     lastpos = new Vector3((int)playerPos.position.x,(int)playerPos.position.y);
+    // }
 
-    bool isWithinRange(Vector3 playerPos, Vector3 mousePos)
-    {
-        if (Vector3.Distance(playerPos, mousePos) < interactionRange)
-            return true;
+    
 
-        return false;
-    }
-
-    void Update()
-    {
-        SelectedTile();
-
-        RaycastHit2D hit = Physics2D.Raycast(Camera.main.ScreenToWorldPoint(Input.mousePosition), Vector2.zero);
-
-        Vector3 mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        Vector3 playerPos = new Vector3(playerPosition.position.x, playerPosition.position.y);
-
-        if (hit.collider == null)
-        {
-            hover = false;
-            if (Input.GetMouseButtonDown(1) && isWithinRange(playerPos, mousePos))
-                SpawnObject(BrickTile, Mathf.FloorToInt(mousePos.x), Mathf.FloorToInt(mousePos.y));
-
-        }
-
-        else if (hit.collider.gameObject.tag == "World")
-        {
-            if (isWithinRange(playerPos, mousePos))
-            {
-                hover = true;
-                hoverTile.transform.position = new Vector3(Mathf.FloorToInt(mousePos.x) + 0.5f, Mathf.FloorToInt(mousePos.y) + 0.5f, -0.1f);
-
-                if (Input.GetMouseButtonDown(0))
-                    DestroyObject(hit.collider.gameObject);
-
-            }
-            else
-                hover = false;
-        }
-        else
-            hover = false;
-
-    }
-
+    // private void FrustumCulling(){
+    //     foreach (var tile in GeneratedTiles)
+    //     {
+    //         if (tile.transform.position.x > (playerPos.position.x+cullingDistance) || tile.transform.position.x < (playerPos.position.x-cullingDistance))
+    //             tile.SetActive(false);
+            
+    //         else
+    //             tile.SetActive(true);
+    //     }
+    // }
 }

@@ -7,6 +7,7 @@ using UnityEngine;
 
 public class MovementController : MonoBehaviour
 {
+    public ParticleSystem dust;
     public Animator animator;
 
     [Header("Movement Controls")]
@@ -70,7 +71,10 @@ public class MovementController : MonoBehaviour
 
 
         if (moveHorizontal != 0)
+        {
             animator.SetBool("isRunning", true);
+            CreateDust();
+        }
 
         else
             animator.SetBool("isRunning", false);
@@ -87,7 +91,10 @@ public class MovementController : MonoBehaviour
             canJump = true;
 
         else
+        {
+            CreateDust();
             StartCoroutine(CoyoteTimer());
+        }
         
     }
 
@@ -96,10 +103,15 @@ public class MovementController : MonoBehaviour
         Gizmos.DrawWireCube(transform.position - transform.up * castDistance, boxSize);
     }
 
+    private void CreateDust(){
+        dust.Play();
+    }
+
     IEnumerator CoyoteTimer()
     {
-        yield return new WaitForSecondsRealtime(8f);
+        yield return new WaitForSecondsRealtime(1f);
         canJump = false;
+        
     }
 
 }
